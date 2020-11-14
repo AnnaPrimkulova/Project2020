@@ -1,0 +1,61 @@
+# role tasks
+#
+- block:
+  - name: install all initial packages
+    yum:
+      name: ['man', 'man-pages', 'mlocate', 'vim', 'bind-utils']
+      state: latest
+
+  - name: install ftp server packages
+    yum:
+      name: "vsftpd,libsemanage-python"
+      state: latest
+
+  - name: Create ftp user
+    user:
+      name: "{{ item.username }}"
+      state: "{{ item.state | default(omit) }}"
+      remove: "{{ item.remove | default(omit) }}"
+      comment: "{{ item.comment | default(item.name) }}"
+      uid: "{{ item.uid | default(omit) }}"
+      password: "{{ item.password }}"
+      home: "{{ item.home | default(omit) }}"
+      shell: /bin/bash
+    with_items: "{{ vsftpd_users }}"
+
+  - name: firewalld permits ftp service
+    firewalld:
+      service: ftp
+      permanent: true
+      state: enabled
+      immediate: yes
+
+  - name: Set SELinux booleans
+    seboolean:
+      name: "{{ item }}"
+      state: yes
+      persistent: yes
+    with_items:
+      - ftpd_full_access
+
+  - name: Ensure service is started
+    service:
+      name: vsftpd
+      state: started
+      enabled: true
+
+  - name: Install configuration file
+    template:
+      src: etc_vsftpd_vsftpd.conf.j2
+      dest: /etc/vsftpd/vsftpd.conf
+      owner: root
+      group: root
+      mode: 0600
+      setype: etc_t
+    notify: restart vsftpd
+
+  - name: Create a sample file in /var/ftp/pub directory
+    shell: |
+      echo 'This is line one in sample file.
+      This is line two.
+      This is line three' > /var/ftp/pub/sample.txt

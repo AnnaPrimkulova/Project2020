@@ -1,0 +1,12 @@
+---
+# defaults file for nfs-client
+#
+nfs_fstab: "prdx-nfs101:/var/nfsshare      /clientshare     nfs      rw,sync,hard,intr      0 0"
+
+nfs_rpcbind_state: started
+nfs_rpcbind_enabled: true
+
+nfs_share_mounts:
+  - path: /clientshare
+    location: prdx-nfs101:/var/nfsshare
+    opts: "rw,sync,hard,intr"

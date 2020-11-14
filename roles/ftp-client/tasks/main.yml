@@ -1,0 +1,12 @@
+---
+# tasks file for ftp-client
+- block:
+  - name: install all initial packages
+    yum:
+      name: ['man', 'man-pages', 'mlocate', 'vim', 'bind-utils']
+      state: latest
+
+  - name: install ftp client package
+    yum:
+      name: "ftp"
+      state: latest

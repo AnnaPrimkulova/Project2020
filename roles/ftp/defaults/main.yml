@@ -1,0 +1,6 @@
+---
+# defaults file for ftp
+vsftpd_users:
+  - username: ftpuser
+    name: FTP User
+    password: "{{ 'password' | password_hash('sha256', 'mysecretsalt') }}"

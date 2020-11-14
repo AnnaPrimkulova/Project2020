@@ -1,0 +1,145 @@
+---
+- name: Install remi repository
+  package:
+    name: http://rpms.remirepo.net/enterprise/remi-release-7.rpm
+    state: installed
+
+- name: Install wget yum-utils git
+  package:
+    name: wget,yum-utils,git
+    state: installed
+
+- name: disable remi-php54
+  shell: yum-config-manager --disable remi-php54
+
+- name: enable remi-php73
+  shell: yum-config-manager --enable remi-php73
+
+- name: Install more php packages
+  package:
+    name: php-pdo,php-gd,php-mbstring,php-xml,php-intl,texlive,php-pecl-Fileinfo
+    state: installed
+
+- name: restart mariadb
+  service:
+    name: '{{ mariadb_service }}'
+    state: restarted
+
+- name: Ensure httpd service is restarted
+  service:
+    name: httpd
+    state: restarted
+
+- name: Download core Mediawiki
+  git:
+    dest: "{{ mediawiki_path }}"
+    version: "{{ mediawiki_version }}"
+    force: true
+    repo: https://github.com/wikimedia/mediawiki.git
+  register: mediawiki_download
+  notify:
+    - composer update mediawiki
+    - maintenance update mediawiki
+
+- name: Download mediawiki extensions
+  git:
+    dest: "{{ mediawiki_path }}/extensions/{{ item.name }}"
+    version: "{{ item.version | default(mediawiki_version) }}"
+    force: true
+    repo: "{{ item.git | default('https://github.com/wikimedia/mediawiki-extensions-' + item.name + '.git') }}"
+  loop: "{{ mediawiki_extensions }}"
+  register: mediawiki_extensions_download
+  notify:
+    - composer update mediawiki
+    - maintenance update mediawiki
+
+- name: Download mediawiki skins
+  git:
+    dest: "{{ mediawiki_path }}/skins/{{ item.name }}"
+    version: "{{ item.version | default(mediawiki_version) }}"
+    force: true
+    repo: "{{ item.git | default('https://github.com/wikimedia/mediawiki-skins-' + item.name + '.git') }}"
+  loop: "{{ mediawiki_skins }}"
+  register: mediawiki_skin_download
+  notify:
+    - composer update mediawiki
+    - maintenance update mediawiki
+
+
+- name: Install mediawiki
+  shell: "{{ lookup('template', 'install.sh.j2') }}"    # noqa 305
+  args:
+    creates: "{{ mediawiki_path }}/LocalSettings.php"
+  register: mediawiki_install
+
+
+- name: Get wgSecretkey   # noqa 305 503
+  shell: |
+    set -o pipefail
+    grep wgSecretKey {{ mediawiki_path }}/LocalSettings.php | awk -F\" '{ print $2 }i'
+  register: r_wgSecretKey
+  when:
+    - mediawiki_download.changed
+    - mediawiki_extensions_download.changed
+    - mediawiki_skin_download.changed
+    - mediawiki_install.changed
+
+- name: Get wgUpgradeKey  # noqa 305 503
+  shell: |
+    set -o pipefail
+    grep wgUpgradeKey {{ mediawiki_path }}/LocalSettings.php | awk -F\" '{ print $2 }'
+  register: r_wgUpgradeKey
+  when:
+    - mediawiki_download.changed
+    - mediawiki_extensions_download.changed
+    - mediawiki_skin_download.changed
+#    - mediawiki_install.changed
+
+- name: Register keys
+  set_fact:   # noqa 503
+    wgSecretKey: "{{ r_wgSecretKey.stdout | trim }}"
+    wgUpgradeKey: "{{ r_wgUpgradeKey.stdout | trim }}"
+  when:
+    - mediawiki_download.changed
+    - mediawiki_extensions_download.changed
+    - mediawiki_skin_download.changed
+#    - mediawiki_install.changed
+- name: Configure mediawiki
+  template:   # noqa 503
+    src: LocalSettings.php.j2
+    dest: "{{ mediawiki_path }}/LocalSettings.php"
+  when:
+    - mediawiki_download.changed
+    - mediawiki_extensions_download.changed
+    - mediawiki_skin_download.changed
+#    - mediawiki_install.changed
+  notify:
+    - maintenance update mediawiki
+
+- name: Move MediaWiki files to apache document root
+  command: cp /var/www/html/test.php /var/www/mediawiki/.
+
+- name: Delete directory mediawiki-1.34.2 and mediawiki-1.34.2.tar.gz
+  file:
+    path: /var/www/html
+    state: absent
+
+- name: Check and stat if MediaWiki package
+  stat: path=/var/www/mediawiki
+  register: mediawiki_stat
+
+- name: Move MediaWiki files to apache document root
+  command: mv /var/www/mediawiki /var/www/html
+  when: mediawiki_stat.stat.exists
+
+- name: Wait until the file /var/www/html is present before continuing
+  wait_for:
+    path: /var/www/html
+- name: restart apache
+  service:
+    name: httpd
+    state: restarted
+- name: Delete composer.phar file
+  file:
+    path: /var/www/composer.phar
+    state: absent

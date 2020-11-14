@@ -1,0 +1,8 @@
+---
+- name: Set up NFS client
+  hosts: ansible,ftp,samba,db,wiki,nginx
+  user: ansible
+  become: yes
+
+  roles:
+  - nfs-client

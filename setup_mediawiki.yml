@@ -1,0 +1,8 @@
+---
+- name: Set up Mediawiki
+  hosts: wiki
+  user: ansible
+  become: yes
+
+  roles:
+  - mediawiki

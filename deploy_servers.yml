@@ -1,0 +1,7 @@
+---
+  - name: Server provisioning playbook
+    hosts: ftp
+    user: ansible
+    become: yes
+    roles:
+        - ftp

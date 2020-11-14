@@ -1,0 +1,8 @@
+---
+- name: Set ftp client on servers
+  hosts: ansible,nfs,samba,db,wiki,nginx
+  remote_user: ansible
+  become: yes
+
+  roles:
+  - ftp-client

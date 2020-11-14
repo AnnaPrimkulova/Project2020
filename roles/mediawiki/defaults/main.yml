@@ -1,0 +1,129 @@
+# roles/mariadb/defaults/main.yml
+---
+### Added list of databases to be created
+mariadb_databases:
+  - name: media_wiki
+mariadb_root_password: 'password'
+
+mariadb_mirror: yum.mariadb.org
+mariadb_version: '10.5.5'
+
+mariadb_auth_unix_plugin: false
+
+
+# 27 is default in /usr/share/doc/setup-*/uidgid
+mariadb_system_user:
+  name: 'mysql'
+  uid: 27
+  gid: 27
+  shell: '/sbin/nologin'
+  home: '/var/lib/mysql'
+  comment: 'MySQL Server'
+
+mariadb_service: mariadb
+
+mariadb_bind_address: '0.0.0.0'
+mariadb_server_cnf:
+  general-log:
+  general-log-file: 'queries.log'
+  slow-query-log:
+  slow-query-log-file: 'mariadb-slow.log'
+  long-query-time: '5.0'
+mariadb_custom_cnf:
+  mariadb:
+    autoset_open_files_limit:
+    max-connections: '20'
+mariadb_configure_swappiness: true
+mariadb_swappiness: '10'
+
+mariadb_logrotate:
+  configure: true
+  rotate: 3
+
+### Below entries are for media wiki
+mariadb_users:
+  - name: media_wiki
+    password: password
+    priv: '*.*:ALL,GRANT'
+
+mediawiki_database:
+  type: mysql
+  user: media_wiki
+  name: media_wiki
+  password: password
+
+mediawiki_admin_user: media_wiki
+mediawiki_admin_pass: Password123$
+
+
+# Mediawiki default settings
+mediawiki_wiki_name: My Wiki
+mediawiki_wiki_namespace: My_Wiki
+mediawiki_wiki_url: http://192.168.5.214
+mediawiki_database.type: mysql
+mediawiki_database.server: 192.168.5.214
+mediawiki_database.name: media_wiki
+mediawiki_database.user: media_wiki
+mediawiki_database.password: password
+mediawiki_database.prefix: wiki_
+mediawiki_path: /var/www/mediawiki
+mediawiki_version: REL1_34
+
+apache_document_root: /var/www/html
+
+mediawiki_extensions:
+  - name: CategoryTree
+  - name: Cite
+  - name: CiteThisPage
+  - name: CodeEditor
+  - name: ConfirmEdit
+  - name: Gadgets
+  - name: ImageMap
+  - name: InputBox
+  - name: Interwiki
+  - name: LocalisationUpdate
+  - name: MultimediaViewer
+  - name: Nuke
+  - name: OATHAuth
+  - name: PageImages
+  - name: ParserFunctions
+  - name: PdfHandler
+  - name: Poem
+  - name: Renameuser
+  - name: ReplaceText
+  - name: Scribunto
+  - name: SpamBlacklist
+  - name: SyntaxHighlight_GeSHi
+  - name: TextExtracts
+  - name: TitleBlacklist
+  - name: WikiEditor
+
+mediawiki_skins:
+  - name: MonoBook
+  - name: Timeless
+  - name: Vector
+
+### Added for installing composer
+composer_path: /usr/local/bin/composer
+composer_keep_updated: false
+composer_version: ''
+
+# The directory where global packages will be installed.
+composer_home_path: '~/.composer'
+composer_home_owner: root
+composer_home_group: root
+
+# A list of packages to install globally. See commented examples below for
+# usage; the 'release' is optional, and defaults to '@stable'.
+composer_global_packages: []
+# - { name: phpunit/phpunit, release: "4.7.x" }
+# - { name: phpunit/phpunit, release: "@stable" }
+
+composer_add_to_path: true
+
+# Add a project vendor/bin directory to the PATH
+composer_add_project_to_path: false
+# composer_project_path: /path/to/project/vendor/bin
+
+# GitHub OAuth token (used to help overcome API rate limits).
+composer_github_oauth_token: ''

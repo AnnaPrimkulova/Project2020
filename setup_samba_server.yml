@@ -1,0 +1,8 @@
+---
+- name: Set up Samba server
+  hosts: samba
+  user: ansible
+  become: yes
+
+  roles:
+  - samba

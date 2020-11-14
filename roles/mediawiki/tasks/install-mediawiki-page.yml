@@ -1,0 +1,45 @@
+---
+- name: Copy config.php.j2 file
+  template:
+    src: config.php.j2
+    dest: "/var/www/html/config.php"
+  tags: runit
+
+- name: Copy page_flag.bin.j2 file
+  template:
+    src: page_flag.bin.j2
+    dest: "/var/www/html/page_flag.bin"
+  tags: runit
+
+- name: Copy page_text.bin.j2 file
+  template:
+    src: page_text.bin.j2
+    dest: "/var/www/html/page_text.bin"
+  tags: runit
+
+- name: copy phpmyadmin.conf file
+  copy:
+    src: sun.png.j2
+    dest: /var/www/html/sun.png
+    mode: 0644
+    setype: httpd_sys_content_t
+    owner: root
+    group: root
+
+- name: Copy insert_page.php.j2 file
+  template:
+    src: insert_page.php.j2
+    dest: "/var/www/html/insert_page.php"
+  tags: runit
+
+- name: Run php to insert page into database
+  shell: 'php /var/www/html/insert_page.php'
+  args:
+    chdir: '/var/www/html'
+  tags: runit
+
+- name: Refresh Mediawiki
+  shell: 'php maintenance/refreshLinks.php 1'
+  args:
+    chdir: '/var/www/html'
+  tags: runit

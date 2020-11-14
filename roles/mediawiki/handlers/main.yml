@@ -1,0 +1,14 @@
+---
+# handlers file for mediawiki
+- name: restart mariadb
+  service:
+    name: '{{ mariadb_service }}'
+    state: restarted
+
+- name: composer update mediawiki
+  composer:
+    command: install
+    working_dir: "{{ apache_document_root }}"
+
+- name: maintenance update mediawiki
+  command: php {{ apache_document_root }}/maintenance/update.php --quick

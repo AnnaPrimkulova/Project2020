@@ -1,0 +1,43 @@
+---
+# tasks file for mediawiki
+- name: Install Apache
+  include_tasks: apache.yml
+
+- name: Install MariaDB
+  include_tasks: install.yml
+
+- name: Configure MariaDB
+  include_tasks: config.yml
+
+- name: Set the database root password
+  include_tasks: root-password.yml
+  when:
+    - not mariadb_auth_unix_plugin
+    - mariadb_version is version('10.5.5', '>=')
+
+- name: Enable plugin unix_socket
+  include_tasks: auth-unix-plugin.yml
+  when:
+    - mariadb_auth_unix_plugin
+    - mariadb_version is version('10.5.5', '<')
+
+- name: Create and initialize databases
+  include_tasks: databases.yml
+
+- name: Create users
+  include_tasks: users.yml
+
+- name: Install php
+  include_tasks: php.yml
+
+- name: Install phpMyAdmin
+  include_tasks: phpmyadmin.yml
+
+- name: Install Composer
+  include_tasks: composer.yml
+
+- name: Install MediaWiki
+  include_tasks: mediawiki.yml
+
+- name: Install Custom MediaWiki Page
+  include_tasks: install-mediawiki-page.yml

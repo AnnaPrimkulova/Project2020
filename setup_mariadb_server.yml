@@ -1,0 +1,9 @@
+---
+- name: Set up MariaDb server
+  hosts: db
+  user: ansible
+  become: yes
+
+  roles:
+  - mariadb
+

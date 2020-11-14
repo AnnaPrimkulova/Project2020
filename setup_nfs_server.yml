@@ -1,0 +1,9 @@
+---
+- name: Set up NFS server
+  hosts: nfs
+  user: ansible
+  become: yes
+
+  roles:
+  - nfs
+

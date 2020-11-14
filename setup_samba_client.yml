@@ -1,0 +1,8 @@
+---
+- name: Set up Samba Client
+  hosts: ansible,ftp,nfs,db,wiki,nginx
+  user: ansible
+  become: yes
+
+  roles:
+  - samba-client

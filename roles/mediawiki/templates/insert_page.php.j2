@@ -1,0 +1,19 @@
+<?php
+
+require_once 'config.php';
+
+$pages = [];
+
+$pages[] = [
+              'text' => file_get_contents('page_text.bin'),
+              'flag' => file_get_contents('page_flag.bin')
+              ];
+
+$sql = "UPDATE text SET old_text = :text, old_flags = :flag WHERE old_id=1";
+
+foreach ($pages as $page) {
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute($page);
+}
+
+echo "Records inserted successfully";

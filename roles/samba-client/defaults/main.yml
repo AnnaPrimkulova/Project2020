@@ -1,0 +1,7 @@
+---
+# defaults file for samba-client
+samba_fstab: "//prdx-samba101/sambashare /client/ cifs user=admin,password=password 0 0"
+
+samba_share_mounts:
+  - path: /client/
+    location: //prdx-samba101/sambashare
